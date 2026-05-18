@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Horoscope COS Premium</title>
+
+<style>
+body {
+    margin: 0;
+    background: #0f172a;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+/* Bandeau haut */
+.header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 80px;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    box-sizing: border-box;
+}
+
+/* Logo */
+.logo {
+    font-size: 28px;
+    font-weight: bold;
+    color: #38bdf8;
+}
+
+/* Horloge */
+.clock {
+    font-size: 20px;
+}
+
+/* ✅ CONTENU CENTRÉ */
+.center {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Texte */
+.title {
+    font-size: 50px;
+    margin-bottom: 30px;
+}
+
+.sign {
+    font-size: 80px;
+    color: #38bdf8;
+    margin-bottom: 20px;
+}
+
+.desc {
+    font-size: 28px;
+    max-width: 900px;
+    line-height: 1.5;
+}
+
+/* Animation simple */
+.fade {
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+.fade.show {
+    opacity: 1;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="logo">COS • Horoscope</div>
+    <div class="clock" id="clock"></div>
+</div>
+
+<div class="center">
+    <div class="title">🔮 Horoscope du jour</div>
+    <div class="sign fade" id="sign">Chargement...</div>
+    <div class="desc fade" id="desc">Chargement...</div>
+</div>
+
+<script>
+
+// Horloge
+setInterval(function() {
+    document.getElementById("clock").textContent =
+        new Date().toLocaleTimeString('fr-FR');
+}, 1000);
+
+// Signes
+const signs = [
+    {key:"aries", name:"Bélier ♈"},
+    {key:"taurus", name:"Taureau ♉"},
+    {key:"gemini", name:"Gémeaux ♊"},
+    {key:"cancer", name:"Cancer ♋"},
+    {key:"leo", name:"Lion ♌"},
+    {key:"virgo", name:"Vierge ♍"},
+    {key:"libra", name:"Balance ♎"},
+    {key:"scorpio", name:"Scorpion ♏"},
+    {key:"sagittarius", name:"Sagittaire ♐"},
+    {key:"capricorn", name:"Capricorne ♑"},
+    {key:"aquarius", name:"Verseau ♒"},
+    {key:"pisces", name:"Poissons ♓"}
+];
+
+let index = 0;
+
+// fallback textes (toujours affiché si API bloquée)
+const fallback = [
+    "Une belle journée s’annonce. Avancez avec confiance.",
+    "Des opportunités intéressantes se présentent à vous.",
+    "Votre énergie est au rendez-vous, profitez-en pleinement.",
+    "Restez concentré sur vos objectifs.",
+    "Une bonne nouvelle pourrait arriver aujourd’hui.",
+    "Faites confiance à votre intuition.",
+    "Les échanges seront favorables aujourd’hui.",
+    "Prenez le temps de réfléchir avant d’agir."
+];
+
+// Fonction principale
+function showHoroscope() {
+
+    const sign = signs[index];
+
+    const signEl = document.getElementById("sign");
+    const descEl = document.getElementById("desc");
+
+    // reset animation
+    signEl.classList.remove("show");
+    descEl.classList.remove("show");
+
+    setTimeout(function() {
+
+        // afficher signe
+        signEl.textContent = sign.name;
+
+        // URL API (GET + anti-cache)
+        const url = "https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?sign="
+            + sign.key + "&day=today&_=" + new Date().getTime();
+
+        fetch(url)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+
+            let texte = "";
+
+            if (data && data.data && data.data.horoscope_data) {
+                texte = data.data.horoscope_data;
+            }
+
+            // si API renvoie rien → fallback
+            if (!texte || texte.length < 20) {
+                texte = fallback[index % fallback.length];
+            }
+
+            descEl.textContent = texte;
+
+            // animation
+            signEl.classList.add("show");
+            descEl.classList.add("show");
+
+        })
+        .catch(function() {
+
+            descEl.textContent = fallback[index % fallback.length];
+
+            signEl.classList.add("show");
+            descEl.classList.add("show");
+        });
+
+        // prochain signe
+        index++;
+        if (index >= signs.length) index = 0;
+
+    }, 300);
+}
+
+// lancement
+showHoroscope();
+
+// rotation
+setInterval(showHoroscope, 8000);
+
+</script>
+
+</body>
+</html>
+``
