@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Horoscope Hebdomadaire COS</title>
+<style>
+body {margin:0;background:#0f172a;color:white;font-family:Arial;text-align:center;}
+.header {position:fixed;top:0;width:100%;height:70px;background:#020617;display:flex;justify-content:space-between;align-items:center;padding:0 30px;box-sizing:border-box;}
+.logo {font-size:24px;color:#38bdf8;font-weight:bold;}
+.clock {font-size:18px;}
+.center {height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px;}
+.sign {font-size:70px;color:#38bdf8;margin-bottom:20px;}
+.desc {font-size:28px;max-width:900px;line-height:1.5;}
+.week {font-size:20px;margin-bottom:20px;color:#94a3b8;}
+.fade {opacity:0;transition:opacity 1s;}
+.fade.show {opacity:1;}
+</style>
+</head>
+<body>
+<div class="header">
+ <div class="logo">COS • Horoscope Hebdo</div>
+ <div class="clock" id="clock"></div>
+</div>
+<div class="center">
+ <div class="week" id="week"></div>
+ <div class="sign fade" id="sign">Chargement...</div>
+ <div class="desc fade" id="desc">Chargement...</div>
+</div>
+<script>
+// horloge
+setInterval(function(){document.getElementById("clock").textContent=new Date().toLocaleTimeString('fr-FR');},1000);
+
+// semaine actuelle
+const d=new Date();
+const first=new Date(d.setDate(d.getDate()-d.getDay()+1));
+const last=new Date(d.setDate(first.getDate()+6));
+document.getElementById("week").textContent = "Semaine du "+ first.toLocaleDateString('fr-FR') +" au " + last.toLocaleDateString('fr-FR');
+
+const signs = [
+{key:"aries",name:"Bélier ♈"},{key:"taurus",name:"Taureau ♉"},{key:"gemini",name:"Gémeaux ♊"},{key:"cancer",name:"Cancer ♋"},{key:"leo",name:"Lion ♌"},{key:"virgo",name:"Vierge ♍"},{key:"libra",name:"Balance ♎"},{key:"scorpio",name:"Scorpion ♏"},{key:"sagittarius",name:"Sagittaire ♐"},{key:"capricorn",name:"Capricorne ♑"},{key:"aquarius",name:"Verseau ♒"},{key:"pisces",name:"Poissons ♓"}
+];
+let index=0;
+
+const fallback=[
+"Une semaine favorable pour avancer sereinement.",
+"Des opportunités importantes peuvent apparaître.",
+"Restez concentré sur vos objectifs cette semaine.",
+"Votre énergie sera positive et productive.",
+"Une belle évolution est possible dans vos projets.",
+"Prenez du recul avant de prendre une décision.",
+"Les échanges seront constructifs cette semaine.",
+"Votre motivation fera la différence."
+];
+
+function show(){
+ const sign=signs[index];
+ const s=document.getElementById("sign");
+ const d=document.getElementById("desc");
+ s.classList.remove("show");
+ d.classList.remove("show");
+ setTimeout(function(){
+  s.textContent=sign.name;
+  const url="https://horoscope-app-api.vercel.app/api/v1/get-horoscope/weekly?sign="+sign.key+"&_="+new Date().getTime();
+  fetch(url)
+  .then(r=>r.json())
+  .then(data=>{
+   let t="";
+   if(data && data.data && data.data.horoscope_data){t=data.data.horoscope_data;}
+   if(!t || t.length<20){t=fallback[index%fallback.length];}
+   d.textContent=t;
+   s.classList.add("show");
+   d.classList.add("show");
+  })
+  .catch(()=>{
+   d.textContent=fallback[index%fallback.length];
+   s.classList.add("show");
+   d.classList.add("show");
+  });
+  index=(index+1)%signs.length;
+ },300);
+}
+
+show();
+setInterval(show,15000);
+</script>
+</body>
+</html>
